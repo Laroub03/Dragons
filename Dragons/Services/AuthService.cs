@@ -10,6 +10,7 @@ using Dragons.Models;
 
 namespace Dragons.Services
 {
+    // Define IAuthService interface for authentication-related operations
     public interface IAuthService
     {
         Dragon RegisterDragon(DragonRegistrationModel model);
@@ -17,23 +18,28 @@ namespace Dragons.Services
         string GenerateJwtToken(string username, bool isSongwriter);
     }
 
+    // Implementation of IAuthService
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
-        private readonly List<Dragon> _dragonStore; // In-memory data store
+        private readonly List<Dragon> _dragonStore;
+        private readonly string _secretKey;
 
+        // Constructor for AuthService, injecting IConfiguration
         public AuthService(IConfiguration configuration)
         {
             _configuration = configuration;
             _dragonStore = new List<Dragon>();
+            _secretKey = _configuration["AppSettings:SecretKey"];
         }
 
+        // Register a new dragon
         public Dragon RegisterDragon(DragonRegistrationModel model)
         {
             // Check if a dragon with the same username already exists
             if (_dragonStore.Exists(d => d.Username == model.Username))
             {
-                return null;
+                return null; // Username is already taken
             }
 
             // Hash the password securely using BCrypt
@@ -51,12 +57,9 @@ namespace Dragons.Services
             return dragon;
         }
 
-
-
-
+        // Authenticate a dragon
         public Dragon Authenticate(string username, string password)
         {
-            // Implement authentication logic here
             var dragon = _dragonStore.Find(d => d.Username == username);
 
             if (dragon != null && BCrypt.Net.BCrypt.Verify(password, dragon.PasswordHash))
@@ -67,6 +70,7 @@ namespace Dragons.Services
             return null;
         }
 
+        // Generate a JWT token for a dragon
         public string GenerateJwtToken(string username, bool isSongwriter)
         {
             var secretKey = _configuration["AppSettings:SecretKey"];
@@ -76,13 +80,12 @@ namespace Dragons.Services
             {
                 new Claim(ClaimTypes.Name, username),
                 new Claim(ClaimTypes.Role, isSongwriter ? "Songwriter" : "MusicLover"),
-                // Add additional claims here as needed
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(1), // Adjust the expiration time as needed
+                Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature)
             };
 

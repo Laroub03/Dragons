@@ -2,15 +2,18 @@
 
 namespace Dragons.Services
 {
+    // Define IDragonSongService interface for music-related operations
     public interface IDragonSongService
     {
         List<DragonSong> GetTopTenSongs();
     }
 
+    // Implementation of IDragonSongService
     public class DragonSongService : IDragonSongService
     {
-        private List<DragonSong> _songs; 
+        private List<DragonSong> _songs;
 
+        // Constructor for DragonSongService, initializing the list of dragon songs
         public DragonSongService()
         {
             _songs = new List<DragonSong>
@@ -28,10 +31,10 @@ namespace Dragons.Services
             };
         }
 
+        // Retrieve the top ten dragon songs
         public List<DragonSong> GetTopTenSongs()
         {
             return _songs;
         }
     }
-
 }
